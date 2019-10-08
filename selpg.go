@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 
@@ -11,29 +12,30 @@ import (
 )
 
 var (
-	help               bool
-	startPage, endPage int
-	lineNum            int
-	forcePage          bool
-	destination        string
+	help        bool
+	startPage   int
+	endPage     int
+	lineNum     int
+	forcePage   bool
+	destination string
 )
 
 func init() {
-	pflag.BoolVar(&help, "h", false, "help")
-	pflag.IntVar(&startPage, "s", -1, "page to start printing")
-	pflag.IntVar(&endPage, "e", -1, "page to end printing")
-	pflag.IntVar(&lineNum, "l", 72, "number of lines per page")
-	pflag.BoolVar(&forcePage, "f", false, "change page when meets \\f")
-	pflag.StringVar(&destination, "d", "", "send to where to print")
+	pflag.BoolVarP(&help, "h", "h", false, "help")
+	pflag.IntVarP(&startPage, "s", "s", -1, "page to start printing")
+	pflag.IntVarP(&endPage, "e", "e", -1, "page to end printing")
+	pflag.IntVarP(&lineNum, "l", "l", 72, "number of lines per page")
+	pflag.BoolVarP(&forcePage, "f", "f", false, "change page when meets \\f")
+	pflag.StringVarP(&destination, "d", "d", "", "send to where to print")
 
 	pflag.Usage = usage
 }
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `selpg version: selpg/1.0
-	Usage: go run selpg.go -sNumber -eNumber [-l] [-p prefix] [-g directives]
-	
-	Options:\n`)
+	Usage: go run selpg.go -sNumber -eNumber [-lNumber]|[-f] [-dDestionation]	
+	Options:
+`)
 	pflag.PrintDefaults()
 }
 
@@ -83,6 +85,7 @@ func main() {
 	}
 	cursor := 0
 	var line string
+	var data string
 	for {
 		if line, _ = reader.ReadString(pageSepe); line == "" {
 			break
@@ -91,13 +94,18 @@ func main() {
 			if destination == "" {
 				fmt.Print(line)
 			} else {
+				data += line
 			}
 		}
 		cursor++
 	}
 	if destination != "" {
 		cmd := exec.Command("lp", "-d"+destination)
-		_, err := cmd.StdinPipe()
+		stdin, err := cmd.StdinPipe()
 		handle(err)
+		io.WriteString(stdin, data)
+		err = cmd.Run()
+		handle(err)
+		stdin.Close()
 	}
 }

@@ -124,7 +124,7 @@ $ selpg -s10 -e20 -f ...
 
 ## Test
 
-
+`go run selpg.go --s 1 --e 2 <test.txt`
 
 
 ## References
