@@ -1,6 +1,6 @@
 # Selpg CLI
 
-## flags
+## pflags
 
 > CLI（Command Line Interface）实用程序是Linux下应用开发的基础。正确的编写命令行程序让应用与操作系统融为一体，通过shell或script使得应用获得最大的灵活性与开发效率。
 
@@ -14,13 +14,13 @@
 
 解析参数是CLI程序设计中的一大问题，为了实现 POSIX/GNU-风格参数处理，–flags，包括命令完成等支持，程序员们开发了无数第三方包，这些包可以在 [godoc](https://godoc.org/) 找到。善于利用这些第三方包，我们就可以不用重复造轮子，专注于所开发的CLI的运行逻辑了。
 
-flags包就是其中之一，很好的实现了命令行参数的解析。
+pflags包就是其中之一，很好的实现了命令行参数的解析。pflag 是flag包的扩展，函数名在flag的基础上加了P。
 
 使用过程：
 
-1. 使用flag.String(), Bool(), Int() 或 flag.StringVar(), BoolVar(), IntVar() 等函数定义flag
-2. 在所有flag都注册之后，调用`flag.Parse()`进行解析
-3. 解析后，参数对于的值就存入flag中，以供我们使用
+1. 使用flag.StringP(), BoolP(), IntP() 或 flag.StringVarP(), BoolVarP(), IntVarP() 等函数定义pflag
+2. 在所有pflag都注册之后，调用`flag.Parse()`进行解析
+3. 解析后，参数对于的值就存入pflag中，以供我们使用
 
 
 
@@ -120,11 +120,37 @@ $ selpg -s10 -e20 -f ...
 
 ## Design
 
+使用flag.StringP(), BoolP(), IntP() 或 flag.StringVarP(), BoolVarP(), IntVarP() 等函数定义pflag。
 
+解析参数后检验参数，若有参数不合法，如
+
+- 未赋予-s -e 值
+- -s值> -e
+- -f 和 -lNum 同时出现
+
+则返回异常error，交由handle函数处理。handle函数简单将其输出后结束运行。
+
+接下来判断-f的存在，若有，则替换原有的分隔符。
+
+若输入-d，则表明要进行打印，则将结果存储，最后调用命令进行打印。
 
 ## Test
 
-`go run selpg.go --s 1 --e 2 <test.txt`
+test.txt每行一个数字0-1199共1200行。
+
+1. 运行`go run selpg.go -s2 -e3 <test.txt >output.txt`
+
+output.txt 中出现72-215数字，结果正确。
+
+2. 运行`go run selpg.go -s3 -e2 <test.txt 2>error.txt`
+
+error.txt中出现错误信息。
+
+3. 运行`go run selpg.go -s1 -e2 -l50 <test.txt >output.txt`
+
+output.txt中出现0-99数字，结果正确。
+
+
 
 
 ## References

@@ -90,7 +90,7 @@ func main() {
 		if line, _ = reader.ReadString(pageSepe); line == "" {
 			break
 		}
-		if cursor >= (startPage-1)*lineNum && cursor <= (endPage)*lineNum {
+		if cursor >= (startPage-1)*lineNum && cursor < (endPage)*lineNum {
 			if destination == "" {
 				fmt.Print(line)
 			} else {
